@@ -38,6 +38,7 @@
                   <span class="amount">{{ item.price }}</span>
                 </div>
                 <ic-counter @change="handleCounterChange"
+                  :data="item"
                   :value="item.count"
                   :index="idx"></ic-counter>
               </div>
@@ -67,24 +68,20 @@
       }
     },
     watch: {
-      info: {
-        handler (newVal) {
-          if (newVal) {
-            const { menus, goods } = newVal
-            this.menus = menus
-            this.goods = goods
-            console.log(goods)
-          }
-        },
-        deep: true
+      info (newVal) {
+        if (newVal) {
+          const { menus, goods } = newVal
+          this.menus = menus
+          this.goods = goods
+          console.log('info ------')
+          console.log(newVal)
+        }
       }
     },
     methods: {
-      handleCounterChange ({index, count}) {
+      handleCounterChange ({count, item}) {
         this.$emit('count-change', {
-          item: this.goods[this.currentIndex][index],
-          menuIndex: this.currentIndex,
-          goodIndex: index,
+          item,
           count
         })
       },

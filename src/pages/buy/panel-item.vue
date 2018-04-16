@@ -19,6 +19,7 @@
       <div class="good-action">
         <ic-counter @change="handleCountChange"
           :index="index"
+          :data="item"
           :value="item.count"></ic-counter>
       </div>
     </li>
@@ -33,11 +34,8 @@
       items: Array
     },
     methods: {
-      handleCountChange ({index, count}) {
-        this.$emit('panel-count-change', {
-          item: this.items[index],
-          count
-        })
+      handleCountChange (data) {
+        this.$emit('panel-count-change', data)
       }
     },
     components: { IcCounter }

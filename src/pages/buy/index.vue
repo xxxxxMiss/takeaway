@@ -90,22 +90,19 @@
         })
       },
       handlePanelChange (data) {
+        this.handleCount(data)
+
         const {item, count} = data
-        const { menuIndex, goodIndex } = item
-        const { goods } = this.info
+        const { menus, goods } = this.info
+        const menuIndex = menus.findIndex(val => val.big_sort_id === item.big_sort_id)
+        const goodIndex = goods[menuIndex].findIndex(val => val.id === item.id)
 
         goods[menuIndex][goodIndex].count = count
-        this.info = { ...this.info, goods }
-
-        this.handleCount({
-          item,
-          count,
-          menuIndex,
-          goodIndex
-        })
+        this.info = { menus, goods }
       },
       handleCount (data) {
-        const { item, count, menuIndex, goodIndex } = data
+        const { item, count } = data
+        item.count = count
         const index = this.cartinfo.findIndex(val => val.id == item.id)
         let totalCount = 0
         let totalAmount = 0
@@ -114,11 +111,13 @@
           if (count == 0) {
             this.cartinfo.splice(index, 1)
           } else {
-            this.cartinfo.splice(index, 1, { ...item, count, menuIndex, goodIndex })
+            this.cartinfo.splice(index, 1, item)
           }
         } else {
-          this.cartinfo.push({ ...item, count, menuIndex, goodIndex })
+          this.cartinfo.push(item)
         }
+        console.log('------cartinfo')
+        console.log(this.cartinfo)
         this.cartinfo.forEach(({ count, price }) => {
           totalCount += count * 1
           totalAmount += count * 1 * price

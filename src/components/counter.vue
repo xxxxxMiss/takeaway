@@ -3,15 +3,8 @@
     <div v-if="showDecrease"
       class="btn-action"
       @click="decrease">-</div>
-    <input v-if="val != 0"
-      class="counter-input"
-      type="number"
-      :value="val"
-      :min="min"
-      :max="max"
-      :step="step"
-      disabled
-    >
+    <div v-if="val != 0"
+      class="counter-input">{{ val }}</div>
     <div class="btn-action"
       @click="increase"
       :disabled="disabledIncrease">+</div>
@@ -42,7 +35,8 @@
       index: { // use it to distinguish which item clicked in a iterator
         type: Number,
         default: 0
-      }
+      },
+      data: Object
     },
     data () {
       return {
@@ -57,19 +51,27 @@
         return this.val === this.max
       }
     },
+    watch: {
+      val (newVal) {
+        console.log('val---')
+        console.log(newVal)
+      }
+    },
     methods: {
       increase () {
         this.val += this.step
         this.$emit('change', {
           index: this.index,
-          count: this.val
+          count: this.val,
+          item: this.data
         })
       },
       decrease () {
         this.val -= this.step
         this.$emit('change', {
           index: this.index,
-          count: this.val
+          count: this.val,
+          item: this.data
         })
       }
     }
