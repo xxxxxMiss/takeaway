@@ -1,6 +1,5 @@
 <template>
   <button class="ic-btn"
-    :style="{ backgroundColor: bgColor, color: '#fff' }"
     :class="[
       'ic-btn--' + type,
       {
@@ -10,7 +9,7 @@
         'ic-btn--text': text
       }
     ]"
-    :disabled="isDisabled"
+    :disabled="disabled"
     @click="onClick">
     {{ content }}
   </button>
@@ -48,60 +47,11 @@
         type: Boolean,
         default: false
       },
-      timer: {
-        type: Boolean,
-        default: false
-      },
-      endText: {
-        type: String,
-        default: '重新发送'
-      },
       bgColor: String
-    },
-    data () {
-      return {
-        n: 60,
-        end: this.endText
-      }
-    },
-    computed: {
-      isDisabled: {
-        set (v) {
-          this.$emit('input', v)
-        },
-        get () {
-          return this.disabled
-        }
-      },
-      timerText () {
-        return this.n === 0 ? this.end : `${this.n}s`
-      }
-    },
-    watch: {
-      n (newVal) {
-        if (newVal === 0) {
-          this.$emit('timer-end')
-        }
-      }
     },
     methods: {
       onClick (e) {
         this.$emit('click', e)
-        this.timer && this.count()
-      },
-      count () {
-        this.n = 59
-        const steps = () => {
-          const timer = setTimeout(_ => {
-            if (this.n === 0) {
-              clearTimeout(timer)
-            } else {
-              this.n--
-              steps()
-            }
-          }, 1000)
-        }
-        steps()
       }
     },
     components: { IcIcon }
@@ -171,6 +121,8 @@
             border none
           &:active, &[disabled]
             background-color: lighten(value, 62%)
+          &[disabled]
+            color $primary
 
       &--round
         border-radius $round = 16px

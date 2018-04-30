@@ -20,6 +20,11 @@
       disabled: {
         type: Boolean,
         default: false
+      },
+      // unique identifier in iterator
+      index: {
+        type: Number,
+        default: 0
       }
     },
     data () {
@@ -31,7 +36,10 @@
       handleClick () {
         if (this.disabled) return
         this.val = !this.val
-        this.$emit('change', this.val)
+        this.$emit('change', {
+          value: this.val,
+          index: this.index
+        })
       }
     }
   }
@@ -39,7 +47,7 @@
 
 <style lang="stylus">
   @import '../utils/css/var'
-  $checkbox-width = 30px
+  $checkbox-width = 24px
   .ic-checkbox
     display flex
     align-items center

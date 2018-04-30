@@ -27,11 +27,11 @@ export function formatDate (timestamp, sep = '-', showTime = false) {
   }
 
   let ret = [year, month, date].join(sep)
-  return showTime ? ret + [' ', hour, minute, second].join(':') : ret
+  return showTime ? ret + ' ' + [hour, minute, second].join(':') : ret
 }
 
 export function formatTime (time, sep = '-') {
-  if (typeof time === 'string') {
+  if (!Array.isArray(time)) {
     time = [time]
   }
 
@@ -46,4 +46,25 @@ export function formatTime (time, sep = '-') {
     }
     return ret
   }).join(sep)
+}
+
+export function formatPhone (phone) {
+  if (!phone) return ''
+
+  const first = phone.slice(0, 3)
+  const last = phone.slice(-4)
+  return `${first} **** ${last}`
+}
+
+export function formatNumber (str = '', unit = '米') {
+  return (str + '').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,') + ` ${unit}`
+}
+
+export function time2Number (timestr) {
+  return (timestr || '').replace(/:00/g, '').replace(/:30/g, '.5') * 2
+}
+
+export function getTimestamp (timestr) {
+  const [hours, minutes] = timestr.split(':')
+  return new Date().setHours(hours, minutes)
 }

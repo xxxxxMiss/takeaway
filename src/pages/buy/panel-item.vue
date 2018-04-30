@@ -1,5 +1,7 @@
 <template>
-  <ul class="panel-block">
+  <scroll-view scroll-y
+    :style="{'height': height}"
+    class="panel-block">
     <li class="panel-item"
       v-for="(item, index) in items"
       :key="index">
@@ -9,7 +11,6 @@
       <div class="good-info">
         <div class="good-names">
           <span class="name-zh">{{ item.name }}</span>
-          <span class="name-en">{{ item.en_name }}</span>
         </div>
         <div class="good-price">
           <span class="currency">￥</span>
@@ -17,13 +18,18 @@
         </div>
       </div>
       <div class="good-action">
-        <ic-counter @change="handleCountChange"
-          :index="index"
-          :data="item"
-          :value="item.count"></ic-counter>
+        <div class="ic-counter">
+          <div v-if="item.count > 0"
+            class="btn-action"
+            @click.stop="changeCount(item, -1)">-</div>
+          <div v-if="item.count > 0"
+            class="counter-input">{{ item.count }}</div>
+          <div class="btn-action"
+            @click.stop="changeCount(item, 1)">+</div>
+        </div>
       </div>
     </li>
-  </ul>
+  </scroll-view>
 </template>
 
 <script>
@@ -31,11 +37,15 @@
 
   export default {
     props: {
-      items: Array
+      items: Array,
+      height: String
     },
     methods: {
-      handleCountChange (data) {
-        this.$emit('panel-count-change', data)
+      changeCount (item, step) {
+        this.$emit('panel-count-change', {
+          count: step,
+          item
+        })
       }
     },
     components: { IcCounter }
@@ -46,19 +56,16 @@
   @import '../../utils/css/var'
   .panel-block
     position absolute
-    top 50px
     left 0
     width 100%
     bottom 0
     background-color #fff
-    max-height 400px
     overflow hidden
-    overflow-y scroll
   .panel-item
     display flex
-    margin 0 15px
+    margin 0 16px
     border-bottom 1px solid #dadada
-    padding 25px 0
+    padding 16px 0
     .img-container
       width 104px
       height 71px
@@ -76,6 +83,11 @@
         font-size 18px
     .good-action
       flex 1
+      position relative
+      .ic-counter
+        position absolute
+        bottom 0
+        right 0
     .good-names
       padding-bottom 24px
     .name-zh
@@ -84,4 +96,30 @@
     .name-en
       font-size 12px
       color #999
+
+
+  .ic-counter
+    display flex
+    justify-content flex-end
+    align-items center
+    text-align center
+    color $gray-dark
+    font-size 16px
+
+    .btn-action
+      display inline-block
+      width 25px
+      height @width
+      line-height (@width - 4)
+      border 1px solid $primary
+      border-radius 50%
+      font-size 24px
+      color $primary
+      background-color #fff
+      margin 0
+      padding 0
+      outline none
+
+    .counter-input
+      width 40px
 </style>

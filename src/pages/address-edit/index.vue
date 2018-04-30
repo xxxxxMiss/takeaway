@@ -8,8 +8,9 @@
       </div>
       <div class="form-item">
         <input :value="mobileno"
+          type="number"
           @input="handleInput('mobileno', $event)"
-          type="text" placeholder="手机号">
+          placeholder="手机号">
       </div>
       <div class="form-item">
         <div class="label">上海市</div>
@@ -40,6 +41,7 @@
         name: '',
         mobileno: '',
         address: '',
+        id: '',
         is_use: 0
       }
     },
@@ -58,6 +60,7 @@
           name: this.name,
           mobileno: this.mobileno,
           address: this.address,
+          address_id: this.id,
           is_use: this.is_use
         }
         this.$get({
@@ -81,6 +84,7 @@
     },
     onShow () {
       const info = JSON.parse(this.$root.$mp.query.info || {})
+      console.log(info)
       for (let key in this.$data) {
         this[key] = info[key]
       }
@@ -96,6 +100,7 @@
   .page-address-edit
     height 100%
     background-color $background-color
+    padding-bottom 60px
     .form-container
       background-color #fff
       padding 0 25px
@@ -121,5 +126,6 @@
       position fixed
       width 100%
       left 0
-      bottom 0
+      // TODO: why set bottom to zero cause some gap?
+      bottom -5px
 </style>

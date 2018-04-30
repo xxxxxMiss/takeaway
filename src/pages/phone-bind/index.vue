@@ -2,15 +2,15 @@
   <div class="page-phone-bind">
     <div class="form-container">
       <div class="form-item">
-        <input v-model="mobileno" placeholder="请输入手机号"></input>
+        <input type="number" v-model="mobileno" placeholder="请输入手机号"></input>
       </div>
       <div class="form-item">
-        <input v-model="code" placeholder="请输入短信验证码"></input>
+        <input type="number" v-model="code" placeholder="请输入短信验证码"></input>
         <ic-button @click="getMsgCode"
-          timer
+          :disabled="disabled"
           type="primary"
           size="mini"
-          content="获取验证码"></ic-button>
+          :content="content"></ic-button>
       </div>
       <div class="btn-container">
         <ic-button @click="confirm"
@@ -31,12 +31,15 @@
     data () {
       return {
         mobileno: '',
-        code: ''
+        code: '',
+        disabled: false,
+        content: '获取验证码'
       }
     },
     methods: {
       getMsgCode () {
         if (!this.mobileno) return this.$showToast('请输入手机号')
+        this.count()
         this.$get({
           action: 'getauthcode',
           mobileno: this.mobileno
@@ -45,6 +48,19 @@
             this.$showToast('短信验证码已发出')
           }
         })
+      },
+      count () {
+        this.disabled = true
+        this.content = '59s'
+        let n = 59
+        let timer = setInterval(() => {
+          this.content = `${--n}s`
+          if (n === 0) {
+            clearInterval(timer)
+            this.content = '获取验证码'
+            this.disabled = false
+          }
+        }, 1000)
       },
       confirm () {
         if (!this.mobileno) {
@@ -61,7 +77,7 @@
         }).then(info => {
           if (info) {
             this.$showToast('绑定成功')
-            wx.navigator({ url: '/pages/index/index' })
+            wx.reLaunch({ url: '/pages/index/index' })
           }
         })
       }

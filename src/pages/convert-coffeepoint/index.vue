@@ -4,14 +4,23 @@
       <div class="card">
         <div class="card-left">
           <input v-model="number.first"
+            :focus="current == 0"
+            @input="handleInput(0, $event)"
+            @focus="handleFocus(0)"
             maxlength="4"
             type="number"
             placeholder="8888">
           <input v-model="number.second"
+            :focus="current == 1"
+            @input="handleInput(1, $event)"
+            @focus="handleFocus(1)"
             maxlength="4"
             type="number"
             placeholder="8888">
           <input v-model="number.third"
+            :focus="current == 2"
+            @input="handleInput(2, $event)"
+            @focus="handleFocus(2)"
             maxlength="4"
             type="number"
             placeholder="8888">
@@ -38,10 +47,23 @@
           first: '',
           second: '',
           third: ''
-        }
+        },
+        current: 0,
+        length: 0
       }
     },
     methods: {
+      handleInput (index, e) {
+        this.length = this.length || Object.keys(this.number).length
+        if (e.mp.detail.value.length === 4 &&
+          this.current <= this.length) {
+          this.current = index + 1
+        }
+      },
+      // reset current for user's trigger
+      handleFocus (index) {
+        this.current = index
+      },
       convert () {
         const values = Object.values(this.number)
         if (values.some(v => v.length != 4)) {
@@ -53,7 +75,12 @@
           CT_token: store.state.token
         }, true).then(info => {
           if (!info) return
-          this.$showToast('兑换成功')
+          this.$showToast(`兑换成功：+${info.add_coins}`)
+          setTimeout(() => {
+            wx.reLaunch({
+              url: '/pages/index/index'
+            })
+          }, 3000)
           Object.keys(this.number).forEach(key => {
             this.number[key] = ''
           })
@@ -86,13 +113,20 @@
         line-height 40px
         padding 0 10px
         border-radius 6px
+        background-color #fff
+        margin-bottom 10px
+        &:first-child
+          margin-right 8px
+          margin-left 10px
+        &:last-child
+          margin-left 8px
       .card-left
         display flex
         box-sizing border-box
         height 100%
         width calc(100% - 80px)
         background-color #f3f3f3
-        padding-top 45px
+        padding-top 40px
         border-top-left-radius radius
         border-bottom-left-radius radius
       .card-right

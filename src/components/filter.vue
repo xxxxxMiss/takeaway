@@ -31,16 +31,20 @@
               <div class="card-desc">
                 <div>
                   <span class="name">{{ item.name }}</span>
-                  <span class="en_name">{{ item.en_name }}</span>
                 </div>
                 <div class="amount-row">
                   <span class="currency">￥</span>
                   <span class="amount">{{ item.price }}</span>
                 </div>
-                <ic-counter @change="handleCounterChange"
-                  :data="item"
-                  :value="item.count"
-                  :index="idx"></ic-counter>
+                <div class="ic-counter">
+                  <div v-if="item.count > 0"
+                    class="btn-action"
+                    @click="changeCount(item, -1)">-</div>
+                  <div v-if="item.count > 0"
+                    class="counter-input">{{ item.count }}</div>
+                  <div class="btn-action"
+                    @click="changeCount(item, 1)">+</div>
+                </div>
               </div>
             </li>
           </ul>
@@ -73,20 +77,19 @@
           const { menus, goods } = newVal
           this.menus = menus
           this.goods = goods
-          console.log('info ------')
-          console.log(newVal)
         }
       }
     },
     methods: {
-      handleCounterChange ({count, item}) {
-        this.$emit('count-change', {
-          item,
-          count
-        })
-      },
       handleMenuClick (item, index) {
         this.currentIndex = index
+      },
+      changeCount (item, step) {
+        const count = item.count + step
+        this.$emit('count-change', {
+          count,
+          item
+        })
       }
     },
     components: { IcCounter }
@@ -102,10 +105,11 @@
     .filter-menu
       box-sizing border-box
       height 100%
-      width 30%
-      margin-right 25px
+      width 66px
+      margin-right 16px
       color #666
       text-align center
+      font-size 12px
       ul
         height 100%
       .menu-item
@@ -127,10 +131,10 @@
 
     .filter-goods
       box-sizing border-box
-      height 100%
-      width 70%
+      // height 100%
+      width calc(100% - 66)
       background-color $background-color
-      padding-right 15px
+      padding-right 16px
       ul
         height 100%
       .item-card
@@ -164,4 +168,29 @@
         .amount
           color $primary
           font-size 18px
+
+  .ic-counter
+    display flex
+    justify-content flex-end
+    align-items center
+    text-align center
+    color $gray-dark
+    font-size 16px
+
+    .btn-action
+      display inline-block
+      width 20px
+      height @width
+      line-height (@width - 4)
+      border 1px solid $primary
+      border-radius 50%
+      font-size 24px
+      color $primary
+      background-color #fff
+      margin 0
+      padding 0
+      outline none
+
+    .counter-input
+      width 40px
 </style>
