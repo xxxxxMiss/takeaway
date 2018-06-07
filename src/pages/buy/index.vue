@@ -261,6 +261,8 @@
     overflow hidden
     .env-container
       position relative
+      line-height 0
+      margin-bottom 12px
       img
         width 100%
         max-height 180px
@@ -393,8 +395,8 @@
           color #cc8e35
         .item-img
           display none
-          width 58px
-          height 62px
+          width 54px
+          height 58px
         &.checked .item-img
           display inline-block
         &.checked .item-text
@@ -402,10 +404,10 @@
 
     .filter-goods
       box-sizing border-box
-      // height 100%
       width calc(100% - 66px)
       background-color $background-color
       padding-right 16px
+      padding-bottom 70px
       ul
         height 100%
       .item-card
@@ -418,11 +420,11 @@
         margin-bottom 12px
         background-color #fff
         .card-image
-          width 72px
-          height 45px
+          width 100px
+          height @width
           img
-            max-width 100%
-            max-height 100%
+            width 100%
+            height 100%
         .card-desc
           text-align right
           .name

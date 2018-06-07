@@ -14,7 +14,6 @@
 </template>
 
 <script>
-  import store from '@/store'
   import IcSale from '@/components/sale'
 
   export default {
@@ -32,25 +31,39 @@
       }
     },
     onReady () {
-      const token = store.state.token
-      const id = this.$root.$mp.query.user_id
       // http://m.escoffee.net/?action=getshareinfo&send_user_id=7
-      this.$get({
-        action: 'getshareinfo',
-        send_user_id: id,
-        CT_token: token
-      }).then(info => {
-        if (!info) return
-        this.user = info.send_user_info
-        this.info = info.coupon_info
+      return new Promise((resolve, reject) => {
+        wx.login({
+          success: res => {
+            resolve(res.code)
+          },
+          fail: () => {
+            reject(new Error('调用wx.login接口失败'))
+          }
+        })
+      }).then(code => code).then(code => {
+        return this.$get({
+          action: 'wxlogin',
+          code
+        })
+      }).then(info => info).then(io => {
+        if (!io) return
+        const id = this.$root.$mp.query.user_id
         this.$get({
-          action: 'receivecoupon',
+          action: 'getshareinfo',
           send_user_id: id,
-          CT_token: token
-        }, true).then(info => {
-          console.log('=============')
-          console.log(info)
+          CT_token: io.token
+        }).then(info => {
           if (!info) return
+          this.user = info.send_user_info
+          this.info = info.coupon_info
+          this.$get({
+            action: 'receivecoupon',
+            send_user_id: id,
+            CT_token: io.token
+          }, true).then(info => {
+            if (!info) return
+          })
         })
       })
     },

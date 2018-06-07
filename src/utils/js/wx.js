@@ -20,7 +20,10 @@ export default {
       }
       if (typeof msg === 'string') { options.content = msg }
       if (typeof msg === 'object') { options = msg }
-      if (callback) options.success = callback
+      if (typeof callback === 'function') options.success = callback
+      if (typeof callback === 'object') {
+        options = Object.assign(options, callback)
+      }
       wx.showModal(options)
     }
   }

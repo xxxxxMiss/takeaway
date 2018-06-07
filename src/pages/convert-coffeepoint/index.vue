@@ -28,7 +28,7 @@
         <div class="card-right"></div>
         <div class="card-divider"></div>
       </div>
-      <div class="desc">请输入券码兑换咖啡豆</div>
+      <div class="desc">请输入券码兑换咖啡币</div>
     </div>
     <div class="btn-container">
       <span class="btn-convertion" @click="convert">立即兑换</span>
@@ -133,7 +133,7 @@
         width 80px
         height 100%
         background url(https://m.escoffee.net/static/sale_logo.png) no-repeat center 25px
-        background-size 45px 25px
+        background-size 38px 17px
         background-color #fff
         border-top-right-radius radius
         border-bottom-right-radius radius

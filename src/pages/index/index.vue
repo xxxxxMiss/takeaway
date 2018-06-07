@@ -1,85 +1,92 @@
 <template>
   <div class="page-index">
-    <div class="card-userinfo">
-      <img class="vip-img" src="https://m.escoffee.net/static/vip.png">
-      <div class="info">
-        <img class="avatar" :src="userInfo.avatar" alt="用户头像">
-        <div class="nickname">{{ userInfo.nickname }}</div>
-        <div class="vip">VIP</div>
-        <div class="vip-level">{{ userInfo.level_name }}</div>
+    <template v-if="hasShowIntro">
+      <div class="card-userinfo">
+        <div class="image-container"></div>
+        <div class="info">
+          <img class="avatar" :src="userInfo.avatar" alt="用户头像">
+          <div class="nickname">{{ userInfo.nickname }}</div>
+          <div class="vip">VIP</div>
+          <div class="vip-level">{{ userInfo.level_name }}</div>
+        </div>
+        <div class="placeholder"></div>
       </div>
-    </div>
-    <ul class="quick-entry">
-      <li>
-        <a href="/pages/map/map">
-          <ic-icon name="kafei"></ic-icon>
-          <div>点单</div>
-        </a>
-      </li>
-      <li>
-        <a href="/pages/shopping-mall/shopping-mall">
-          <ic-icon name="tubiao-"></ic-icon>
-          <div>商城</div>
-        </a>
-      </li>
-      <li>
-        <a href="/pages/convert-coffeepoint/convert-coffeepoint">
-          <ic-icon name="jinbiduihuan"></ic-icon>
-          <div>兑换码</div>
-        </a>
-      </li>
-    </ul>
-    <ul class="list">
-      <li>
-        <a href="" class="item">
-          <div class="item-left">
-            <ic-icon name="douzi"></ic-icon>
-            <span>咖啡豆</span>
-          </div>
-          <div>{{ userInfo.coffee_coins }}</div>
-        </a>
-      </li>
-      <li>
-        <a href="" class="item">
-          <div class="item-left">
-            <ic-icon name="jifen"></ic-icon>
-            <span>积分</span>
-          </div>
-          <div>{{ userInfo.credit }}</div>
-        </a>
-      </li>
-      <li>
-        <a href="/pages/phone-bind/phone-bind" class="item">
-          <div class="item-left">
-            <ic-icon name="shouji"></ic-icon>
-            <span>手机绑定</span>
-          </div>
-          <div class="item-right">
-            <span :class="{'is-empty': !mobileno}">
-              {{ mobileno || '请绑定手机号' }}
-            </span>
-            <ic-icon name="jiantou"></ic-icon>
-          </div>
-        </a>
-      </li>
-    </ul>
-    <div class="sale-container">
-      <div class="sale-title">
-        <ic-icon name="tubiaolunkuo-"></ic-icon>
-        <span>我的红包</span>
-        <a class="redpacket-entry" href="/pages/redpacket-mine/redpacket-mine?from=mine">查看更多>></a>
+      <ul class="quick-entry">
+        <li>
+          <a @click="goBuy">
+            <ic-icon name="kafei"></ic-icon>
+            <div>点单</div>
+          </a>
+        </li>
+        <li>
+          <a href="/pages/shopping-mall/shopping-mall">
+            <ic-icon name="tubiao-"></ic-icon>
+            <div>商城</div>
+          </a>
+        </li>
+        <li>
+          <a href="/pages/convert-coffeepoint/convert-coffeepoint">
+            <ic-icon name="jinbiduihuan"></ic-icon>
+            <div>兑换码</div>
+          </a>
+        </li>
+      </ul>
+      <ul class="list">
+        <li>
+          <a href="" class="item">
+            <div class="item-left">
+              <ic-icon name="douzi"></ic-icon>
+              <span>咖啡币</span>
+            </div>
+            <div>{{ userInfo.coffee_coins }}</div>
+          </a>
+        </li>
+        <li>
+          <a href="" class="item">
+            <div class="item-left">
+              <ic-icon name="jifen"></ic-icon>
+              <span>积分</span>
+            </div>
+            <div>{{ userInfo.credit }}</div>
+          </a>
+        </li>
+        <li>
+          <a href="/pages/phone-bind/phone-bind" class="item">
+            <div class="item-left">
+              <ic-icon name="shouji"></ic-icon>
+              <span>手机绑定</span>
+            </div>
+            <div class="item-right">
+              <span :class="{'is-empty': !mobileno}">
+                {{ mobileno || '请绑定手机号' }}
+              </span>
+              <ic-icon name="jiantou"></ic-icon>
+            </div>
+          </a>
+        </li>
+      </ul>
+      <div class="sale-container">
+        <div class="sale-title">
+          <ic-icon name="tubiaolunkuo-"></ic-icon>
+          <span>我的红包</span>
+          <a class="redpacket-entry" href="/pages/redpacket-mine/redpacket-mine?from=mine">查看更多>></a>
+        </div>
+        <scroll-view class="scroller-sale" scroll-x>
+          <template v-if="coupon.length > 0">
+            <ic-sale v-for="(item, index) in coupon"
+              show-button
+              @button-click="handleClick"
+              :info="item"
+              :key="index"></ic-sale>
+          </template>
+          <div v-else class="empty">无可用优惠券</div>
+        </scroll-view>
       </div>
-      <scroll-view class="scroller-sale" scroll-x>
-        <template v-if="coupon.length > 0">
-          <ic-sale v-for="(item, index) in coupon"
-            show-button
-            @button-click="handleClick"
-            :info="item"
-            :key="index"></ic-sale>
-        </template>
-        <div v-else class="empty">无可用优惠券</div>
-      </scroll-view>
-    </div>
+    </template>
+    <img v-if="!hasShowIntro"
+      class="introduction"
+      src="https://m.escoffee.net/static/intro.jpg"
+      @load="handleLoad">
   </div>
 </template>
 
@@ -94,7 +101,8 @@ export default {
   data () {
     return {
       userInfo: {},
-      token: ''
+      token: '',
+      hasShowIntro: false
     }
   },
   computed: {
@@ -109,6 +117,26 @@ export default {
     }
   },
   methods: {
+    goBuy () {
+      if (!store.state.user.mobileno) {
+        this.$showModal('首次点餐需绑定手机号，请绑定手机号后进行点餐，谢谢！', {
+          showCancel: true,
+          success: (res) => {
+            if (res.confirm) {
+              wx.navigateTo({ url: '/pages/phone-bind/phone-bind' })
+            }
+          }
+        })
+      } else {
+        wx.navigateTo({ url: '/pages/map/map' })
+      }
+    },
+    handleLoad (e) {
+      setTimeout(() => {
+        this.hasShowIntro = true
+        wx.setStorageSync('hasShowIntro', 'true')
+      }, 3000)
+    },
     handleClick () {
       wx.navigateTo({
         url: '/pages/map/map'
@@ -174,6 +202,7 @@ export default {
     }
   },
   onShow () {
+    this.hasShowIntro = wx.getStorageSync('hasShowIntro')
     try {
       const token = store.state.token
       if (token) {
@@ -199,16 +228,32 @@ export default {
     .card-userinfo
       position relative
       padding 50px 25px 10px
-      background-color #fff
-      .vip-img
+      background-color #211f24
+      .placeholder
+        position absolute
+        background-color #fff
+        width 120%
+        height 50px
+        left 0
+        bottom -33px
+        transform rotate(-5deg)
+        transform-origin left bottom
+      .image-container
+        position relative
+        z-index 3
+        background-color #fff
         box-shadow 0 9px 15px -10px rgba(0, 0, 0, 0.53)
         width 100%
-        height 183px
-        margin-top -25px
+        height 166px
+        margin-top -13px
+        background url(https://m.escoffee.net/static/vip.png) no-repeat center
+        background-size 100%
+        border-radius 6px
       .info
         position absolute
+        z-index 3
         left 0
-        top 0
+        top 15px
         width 100%
         bottom 0
         text-align center
@@ -227,6 +272,8 @@ export default {
       .vip-level
         font-size 12px
     .quick-entry
+      position relative
+      z-index 3
       background-color #fff
       display flex
       text-align center
@@ -294,4 +341,10 @@ export default {
         color #ccc
         padding 20px 0
         text-align center
+
+    .introduction
+      position fixed
+      z-index 10000
+      width 100%
+      height 100%
 </style>

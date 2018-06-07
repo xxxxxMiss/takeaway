@@ -101,7 +101,7 @@
             <span>&times;</span><span>{{ item.count }}</span>
           </div>
         </li>
-        <li class="item">
+        <li class="item" v-if="!isSelfGetting">
           <div>快递费</div>
           <div>
             <span>￥</span>
@@ -116,7 +116,7 @@
           </div>
         </li>
         <li class="item">
-          <div>咖啡豆</div>
+          <div>咖啡币</div>
           <div class="sale">
             <span>-￥</span>
             <span>{{ orderinfo.coffee_coins }}</span>

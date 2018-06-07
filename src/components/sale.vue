@@ -14,8 +14,8 @@
           <div class="ic-checkbox" @click="handleCheck(info, index)">
             <div class="checkbox-inner"
               :class="{ 'checked': isChecked }">
-              <span class="checkbox-circle" v-if="isChecked"></span>
-              <span class="checkbox-disabled" v-if="isDisabled"></span>
+              <span class="checkbox-circle" v-if="isChecked && !isDisabled"></span>
+              <span class="checkbox-disabled" v-else></span>
             </div>
           </div>
         </div>

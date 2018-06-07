@@ -17,7 +17,6 @@ export default {
   // 这个字段走 app.json
   config: {
     pages: [
-      'pages/logs/logs',
       '^pages/index/index',
       'pages/phone-bind/phone-bind',
       'pages/order/order',
@@ -27,7 +26,6 @@ export default {
       'pages/address-edit/address-edit',
       'pages/address-select/address-select',
       'pages/redpacket-mine/redpacket-mine',
-      'pages/redpacket-select/redpacket-select',
       'pages/payment/payment',
       'pages/shopping-mall/shopping-mall',
       'pages/vendor-detail/vendor-detail',

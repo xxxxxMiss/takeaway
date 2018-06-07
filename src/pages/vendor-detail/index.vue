@@ -102,25 +102,25 @@
       left 50%
       top 130px
       transform translateX(-50%)
-      width 100%
+      width 110%
       height 100px
       border-radius 50%
       background-color #fff
     .add-tel
       position absolute
       width 100%
-      height 180px
-      top 50px
+      height 170px
+      top 27px
       background-color #fff
       .name
         text-align center
         font-size 16px
         color #666
-        padding 0 15px 30px
+        padding 0 15px 15px
       .item
         display flex
         border-bottom $border
-        padding 15px
+        padding 15px 8%
         .iconfont
           padding-right 10px
         &:last-child
@@ -147,7 +147,7 @@
       height 10px
 
     .service-content
-      margin-top 170px
+      margin-top 135px
       background-color #fff
       h3
         border-bottom 1px solid #f4f4f4

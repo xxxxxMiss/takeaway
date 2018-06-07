@@ -31,9 +31,11 @@
   import IcIcon from '@/components/icon'
   import ListItem from './list-item'
 
+  // these values should query by wx.createSelectorQuery
+  // here we use constant value for convenience
   const ITEM_HEIGHT = 131
-  const COLLAPSE_HEIGHT = 48
-  const BUTTON_HEIGHT = 55
+  const COLLAPSE_HEIGHT = 45
+  const BUTTON_HEIGHT = 50
   export default {
     data () {
       return {

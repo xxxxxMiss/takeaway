@@ -17,7 +17,7 @@
             :class="{
               'checked': index === currentIndex,
               'no-border': index === currentIndex + 1,
-              'disabled': item.is_waimai == 0
+              'disabled': index == 2 && noTakeaway
             }"
             @click="handleWay(index, item.is_waimai)">
             <ic-icon :name="item.icon"></ic-icon>
@@ -36,6 +36,8 @@
                     <ic-icon name="clock"></ic-icon>
                   </div>
                   <div>{{ dining_time }}</div>
+                  <i class="iconfont icon-z-arrowUp"></i>
+                  <i class="iconfont icon-z-arrowDown"></i>
                 </div>
               </picker>
           </li>
@@ -79,7 +81,8 @@
               <span class="currency">￥</span>
               <span class="price">{{ item.price }}</span>
             </div>
-            <div>
+            <div>&times;&nbsp;&nbsp;{{ item.count }}</div>
+            <!-- <div>
               <div class="ic-counter">
                 <div v-if="item.count > 0"
                   class="btn-action"
@@ -89,7 +92,7 @@
                 <div class="btn-action"
                   @click="handleCountChange(item, 1)">+</div>
               </div>
-            </div>
+            </div> -->
           </li>
           <li class="item" v-if="currentIndex == 2">
             <div>快递费</div>
@@ -104,16 +107,16 @@
               <span>-￥</span>
               <span>{{ redPacket.amount }}</span>
             </div>
-            <div class="sale" v-else>无可选红包</div>
+            <div class="sale is-empty" v-else>无可选红包</div>
             <i class="iconfont icon-jiantou"></i>
           </li>
           <li class="item" @click="coffeeVisible = true">
-            <div>咖啡豆</div>
+            <div>咖啡币</div>
             <div class="sale" v-if="isUseCoffee">
               <span>-￥</span>
               <span>{{ coffeepoint }}</span>
             </div>
-            <div class="sale" v-else>选择咖啡豆</div>
+            <div class="sale" v-else>选择咖啡币</div>
             <i class="iconfont icon-jiantou"></i>
           </li>
           <li class="item" @click="goRemark">
@@ -142,13 +145,13 @@
     <div class="dialog"
       v-if="coffeeVisible">
       <div class="content-block">
-        <h3>使用咖啡豆</h3>
+        <h3>使用咖啡币</h3>
         <div class="item">
-          <span class="label">可用咖啡豆</span>
+          <span class="label">可用咖啡币</span>
           <span class="count">{{ originCoffeepoint }}</span>
         </div>
         <div class="item">
-          <span class="label">使用咖啡豆</span>
+          <span class="label">使用咖啡币</span>
           <span>{{ coffeepoint }}</span>
         </div>
         <div class="btn-group">
@@ -210,9 +213,9 @@
         currentDate: formatDate(Date.now()),
         currentIndex: 0,
         list: [
-          { icon: 'kafei', text: '食堂' },
-          { icon: 'gouwudai-copy', text: '外带' },
-          { icon: 'waimai1', text: '外卖' }
+          { icon: 'kafei', text: '堂食' },
+          { icon: 'gouwudai-copy', text: '外带' }
+          // { icon: 'waimai1', text: '外卖' }
         ],
         multiIndex: [0, 0, 0],
         dining_time: '',
@@ -233,8 +236,9 @@
         express_fee: 0,
         totalAmount: 0,
         redPacket: null,
-        isUseCoffee: true,
-        noBuy: false
+        isUseCoffee: false,
+        noBuy: false,
+        noTakeaway: false
       }
     },
     computed: {
@@ -300,11 +304,11 @@
       handleInput (type, event) {
         this.address[type] = event.mp.detail.value
       },
-      handleWay (index, is_waimai) {
-        this.currentIndex = index
-        if (is_waimai == 0) {
+      handleWay (index) {
+        if (index == 2 && this.noTakeaway) {
           return this.$showModal('对不起，您当前位置超出可配送范围')
         }
+        this.currentIndex = index
 
         this.handleTotalMount()
       },
@@ -393,6 +397,9 @@
             Date.now() > getTimestamp(this.dining_time)) {
           return this.$showModal('选择的时间不能小于当前时间')
         }
+        if (this.currentIndex == 2 && this.noTakeaway) {
+          return this.$showModal('对不起，您当前位置超出可配送范围')
+        }
         if (!this.userAddress && this.currentIndex === 2) {
           if (!this.address.name) {
             return this.$showModal('请填写收货人姓名')
@@ -462,6 +469,8 @@
       const selectRedPacket = this.$root.$mp.query.redinfo
       this.cartinfo = cartinfo
       this.branch = branch
+      // no takeaway if exceed the distance
+      this.noTakeaway = branch.is_waimai == 0
       this.express_fee = branch.express_fee || 0
       this.user = store.state.user
       this.originCoffeepoint = this.user.coffee_coins || 0
@@ -538,18 +547,19 @@
         &.no-border
           border-left 0
         &.disabled
-          background-color #eee
-          border 1px solid #eee
+          background-color #f0f0f0
+          color #cfcfcf
         span
           padding-left 10px
 
       .eat-time
+        position relative
         display flex
         align-items center
         border 1px solid #ccc
         border-radius 6px
         .item-icon
-          padding 5px 6px
+          padding 5px 10px
           background-color #f3f3f3
           text-align center
           margin-right 20px
@@ -557,6 +567,15 @@
           border-bottom-left-radius @border-radius
         .iconfont
           font-size 26px
+        .icon-z-arrowDown,.icon-z-arrowUp
+          position absolute
+          right 15px
+          font-size 16px
+          color #dbdbdb
+        .icon-z-arrowDown
+          bottom 5px
+        .icon-z-arrowUp
+          top 5px
       .first-use input
         border 1px solid #ccc
         border-radius 6px
@@ -609,6 +628,8 @@
         .sale
           color $primary
           padding-right 25px
+          &.is-empty
+            color #999
         .arrow-right
           position absolute
           center-y()
