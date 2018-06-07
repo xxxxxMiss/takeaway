@@ -51,12 +51,6 @@
         return this.val === this.max
       }
     },
-    watch: {
-      val (newVal) {
-        console.log('val---')
-        console.log(newVal)
-      }
-    },
     methods: {
       increase () {
         this.val += this.step

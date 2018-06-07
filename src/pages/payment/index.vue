@@ -1,11 +1,10 @@
 <template>
   <div class="page-payment">
-    <scroll-view scroll-y
-      :style="{ height: height }">
+    <div>
       <a class="vendor-info"
         :href="'/pages/vendor-detail/vendor-detail?id=' + branch.id">
         <div class="info-content">
-          <div class="branch">{{ branch.content }}</div>
+          <div class="branch">{{ branch.name }}</div>
           <div class="address">{{ branch.address }}</div>
         </div>
         <ic-icon name="jiantou"></ic-icon>
@@ -17,29 +16,32 @@
             :key="index"
             :class="{
               'checked': index === currentIndex,
-              'no-border': index === currentIndex + 1
+              'no-border': index === currentIndex + 1,
+              'disabled': index == 2 && noTakeaway
             }"
-            @click="handleWay(index)">
+            @click="handleWay(index, item.is_waimai)">
             <ic-icon :name="item.icon"></ic-icon>
             <span>{{ item.text }}</span>
           </li>
         </ul>
         <ul>
-          <li>
-            <h3>请选择就餐时间</h3>
-              <picker mode="selector"
+          <li v-if="!isTakeaway">
+            <h3>请选择{{ currentIndex == 0 ? '就餐' : '到店' }}时间</h3>
+              <picker mode="multiSelector"
                 :range="range"
-                :value="timeIndex"
+                :value="multiIndex"
                 @change="handleTimeChange">
                 <div class="eat-time">
                   <div class="item-icon">
                     <ic-icon name="clock"></ic-icon>
                   </div>
                   <div>{{ dining_time }}</div>
+                  <i class="iconfont icon-z-arrowUp"></i>
+                  <i class="iconfont icon-z-arrowDown"></i>
                 </div>
               </picker>
           </li>
-          <li>
+          <li v-if="currentIndex == 2">
             <h3>请选择送餐地址</h3>
             <div class="first-use" v-if="!userAddress">
               <div class="use-top">
@@ -54,8 +56,7 @@
                 @input="handleInput('address', $event)"
                 type="text" placeholder="请输入详细地址">
             </div>
-            <a v-else
-              class="reuse" href="/pages/address-select/address-select">
+            <a v-else  class="reuse" @click="goSelectAddress">
               <div class="user-info">
                 <span class="name">{{ userAddress.name }}</span>
                 <span>{{ userAddress.mobileno }}</span>
@@ -80,13 +81,20 @@
               <span class="currency">￥</span>
               <span class="price">{{ item.price }}</span>
             </div>
-            <div>
-              <ic-counter @change="handleCountChange"
-                :index="index"
-                :value="item.count"></ic-counter>
-            </div>
+            <div>&times;&nbsp;&nbsp;{{ item.count }}</div>
+            <!-- <div>
+              <div class="ic-counter">
+                <div v-if="item.count > 0"
+                  class="btn-action"
+                  @click="handleCountChange(item, -1)">-</div>
+                <div v-if="item.count > 0"
+                  class="counter-input">{{ item.count }}</div>
+                <div class="btn-action"
+                  @click="handleCountChange(item, 1)">+</div>
+              </div>
+            </div> -->
           </li>
-          <li class="item">
+          <li class="item" v-if="currentIndex == 2">
             <div>快递费</div>
             <div>
               <span>￥</span>
@@ -99,16 +107,23 @@
               <span>-￥</span>
               <span>{{ redPacket.amount }}</span>
             </div>
-            <div class="sale" v-else>无可用红包</div>
+            <div class="sale is-empty" v-else>无可选红包</div>
             <i class="iconfont icon-jiantou"></i>
           </li>
           <li class="item" @click="coffeeVisible = true">
-            <div>咖啡豆</div>
-            <div class="sale" v-if="coffeepoint">
+            <div>咖啡币</div>
+            <div class="sale" v-if="isUseCoffee">
               <span>-￥</span>
               <span>{{ coffeepoint }}</span>
             </div>
-            <div class="sale" v-else>选择咖啡豆</div>
+            <div class="sale" v-else>选择咖啡币</div>
+            <i class="iconfont icon-jiantou"></i>
+          </li>
+          <li class="item" @click="goRemark">
+            <div class="remark-left">备注</div>
+            <div class="sale remark-right">
+              {{ remark || '请填写备注' }}
+            </div>
             <i class="iconfont icon-jiantou"></i>
           </li>
           <li class="amount-statistic">
@@ -118,19 +133,11 @@
           </li>
         </ul>
       </div>
-      <div class="remark">
-        <h3>备注</h3>
-        <textarea placeholder="请输入您的需求"
-          @input="handleTextarea"
-          :value="remark"
-          :auto-height="true"
-          :show-confirm-bar="false"></textarea>
-      </div>
-    </scroll-view>
+    </div>
     <div class="btn-fixed">
      <button-pay
       text="去支付"
-      @confirm="showConfirmDailog = true"
+      @confirm="goPay"
       :amount="totalAmount"
       :show-icon="false"
       :show-collapse="false"></button-pay>
@@ -138,20 +145,14 @@
     <div class="dialog"
       v-if="coffeeVisible">
       <div class="content-block">
-        <h3>使用咖啡豆</h3>
+        <h3>使用咖啡币</h3>
         <div class="item">
-          <span class="label">可用咖啡豆</span>
-          <span class="count"></span>
+          <span class="label">可用咖啡币</span>
+          <span class="count">{{ originCoffeepoint }}</span>
         </div>
         <div class="item">
-          <span class="label">使用咖啡豆</span>
-          <input :value="coffeepoint"
-            type="digit" @input="handleCoffeeInput">
-        </div>
-        <div class="statistics">
-          <span>已抵扣</span>
-          <span class="currency">-￥</span>
-          <span class="point">{{ coffeepoint }}</span>
+          <span class="label">使用咖啡币</span>
+          <span>{{ coffeepoint }}</span>
         </div>
         <div class="btn-group">
           <div class="btn-cancel"
@@ -166,17 +167,18 @@
       <div class="content-block is-center">
         <img src="https://m.escoffee.net/static/architecture.png" class="architecture">
         <div class="tips">请再次确认您取餐门店</div>
-        <h3 class="branch-content">{{ branch.content }}</h3>
+        <h3 class="branch-content">{{ branch.name }}</h3>
         <div class="address">
           <ic-icon name="dingwei"></ic-icon>
           <span>{{ branch.address }}</span>
         </div>
-        <div class="eat-time">
-          取餐时间：<span>{{ currentDate }}</span>
+        <div class="eat-time" v-if="!isTakeaway">
+          {{ currentIndex == 0 ? '就' : '取' }}餐时间：<span>{{ currentDate }}</span>
           <span>&nbsp;&nbsp;{{ dining_time }}</span>
         </div>
-        <div class="btn-online" @click.stop="handleConfirm">立即支付</div>
-        <div class="btn-offline" @click.stop="handleConfirm(1)">到店支付</div>
+        <div class="btn-online" @click.stop="handleConfirm(1)">立即支付</div>
+        <div class="btn-offline" v-if="!isTakeaway"
+          @click.stop="handleConfirm(0)">到店支付</div>
       </div>
     </div>
   </div>
@@ -184,26 +186,24 @@
 
 <script>
   import store from '@/store'
-  import { formatDate } from '@/utils/js/format'
+  import { formatDate, time2Number, getTimestamp } from '@/utils/js/format'
   import IcIcon from '@/components/icon'
   import IcCounter from '@/components/counter'
   import ButtonPay from '@/components/button-pay'
 
-  function getNearTime () {
+  function getTimeIndex (range) {
     const d = new Date()
     let h = d.getHours()
     let m = d.getMinutes()
-    h = String(h).slice(1) ? h : `0${h}`
-    m = String(m).slice(1) ? m : `0${m}`
-
-    // lost leading zero when arithmetic
-    let t = String(parseInt(`${h}.${m}` * 2) / 2)
-      .replace(/\.5/, ':30')
-    if (t.indexOf(':') === -1) {
-      t = `${t}:00`
+    if (m >= 30) {
+      h += 1
+      m = 0
+    } else {
+      m = 1
     }
-    t = t.split(':')
-    return t[0][1] ? t.join(':') : `0${t[0]}:${t[1]}`
+    let index = range.findIndex(val => val === h)
+    index = index === -1 ? 0 : index
+    return [index, 0, m]
   }
 
   export default {
@@ -213,16 +213,15 @@
         currentDate: formatDate(Date.now()),
         currentIndex: 0,
         list: [
-          { icon: 'kafei', text: '食堂' },
-          { icon: 'gouwudai-copy', text: '外带' },
-          { icon: 'waimai1', text: '外卖' }
+          { icon: 'kafei', text: '堂食' },
+          { icon: 'gouwudai-copy', text: '外带' }
+          // { icon: 'waimai1', text: '外卖' }
         ],
-        timeIndex: 0,
+        multiIndex: [0, 0, 0],
         dining_time: '',
         range: [],
         height: '',
         cartinfo: [],
-        totalAmount: 0,
         branch: {},
         remark: '',
         address: {
@@ -233,89 +232,198 @@
         coffeeVisible: false,
         showConfirmDailog: false,
         originCoffeepoint: '',
-        coffeepoint: 0,
-        express_fee: 0
+        coffeepoint: '',
+        express_fee: 0,
+        totalAmount: 0,
+        redPacket: null,
+        isUseCoffee: false,
+        noBuy: false,
+        noTakeaway: false
       }
     },
     computed: {
+      isTakeaway () {
+        return this.currentIndex === 2
+      },
       userAddress () {
         return this.user &&
           this.user.user_address &&
           this.user.user_address[0]
-      },
+      }
+    },
+    watch: {
       redPacket () {
-        return this.user &&
-          this.user.user_coupon &&
-          this.user.user_coupon.find(item => this.totalAmount > item.min_require)
+        this.handleTotalMount()
+      },
+      isUseCoffee () {
+        this.handleTotalMount()
       }
     },
     methods: {
+      goPay () {
+        if (this.noBuy) {
+          this.$showModal('请先选择商品')
+        } else {
+          this.showConfirmDailog = true
+        }
+      },
+      goSelectAddress () {
+        wx.navigateTo({
+          url: '/pages/address-select/address-select?id=' + this.userAddress.id
+        })
+      },
+      goRemark () {
+        wx.navigateTo({
+          url: '/pages/remark/remark'
+        })
+      },
       goRedpacket () {
         wx.navigateTo({
-          url: '/pages/redpacket-select/redpacket-select'
+          url: `/pages/redpacket-mine/redpacket-mine?from=payment&amount=${this.caclPureMount()}&id=${this.redPacket.id}`
         })
       },
-      handleCountChange ({ index, count }) {
-        let totalAmount = 0
-        this.cartinfo.forEach((item, index) => {
-          totalAmount += item.price * 1 * count
-        })
-        this.totalAmount = totalAmount + this.express_fee - this.coffeepoint
-        if (this.redPacket) {
-          this.totalAmount -= this.redPacket.amount
-        }
-      },
-      handleTextarea (e) {
-        this.remark = e.mp.detail.value
+      handleCountChange (item, count) {
+        item.count += count
+
+        this.handleTotalMount()
+
+        store.commit('setCartinfo', this.cartinfo)
       },
       notUse () {
-        this.coffeepoint = 0
         this.coffeeVisible = false
+        this.isUseCoffee = false
+
+        this.handleTotalMount()
       },
       confirmUse () {
-        if (this.coffeepoint > this.originCoffeepoint) {
-          return wx.showModal({
-            title: '提示',
-            content: '不能超过持有的咖啡豆数量',
-            confirColor: '#ff7a3d'
-          })
-        }
+        this.isUseCoffee = true
         this.coffeeVisible = false
-        this.totalAmount -= this.coffeepoint
-      },
-      handleCoffeeInput (e) {
-        this.coffeepoint = e.mp.detail.value
+
+        this.handleTotalMount()
       },
       handleInput (type, event) {
         this.address[type] = event.mp.detail.value
       },
       handleWay (index) {
+        if (index == 2 && this.noTakeaway) {
+          return this.$showModal('对不起，您当前位置超出可配送范围')
+        }
         this.currentIndex = index
+
+        this.handleTotalMount()
       },
       handleTimeChange (e) {
-        this.timeIndex = e.mp.detail.value
-        this.dining_time = this.range[this.timeIndex]
+        this.multiIndex = e.mp.detail.value
+        this.dining_time = this.handleSetValue(this.multiIndex, this.range)
       },
-      handleConfirm (no_pay = 0) {
-        function getTimeNumber (str = '') {
-          return str.replace(':30', '.5').replace(':00', '.') * 2
+      handleSetValue (index, range) {
+        const [hi, di, mi] = index
+        return `${range[0][hi]}${range[1][di]}${range[2][mi]}`
+      },
+      caclPureMount () {
+        let totalAmount = 0
+        this.cartinfo.forEach(({price, count}) => {
+          totalAmount += price * 1 * count
+        })
+        return totalAmount
+      },
+      // calc total amout just a condition is changed
+      handleTotalMount () {
+        let totalAmount = this.caclPureMount()
+
+        // dont buy
+        if (totalAmount == 0) {
+          this.totalAmount = 0
+          this.noBuy = true
+          return
+        } else {
+          this.noBuy = false
         }
-        if (getTimeNumber(this.dining_time) < getTimeNumber(getNearTime())) {
-          return wx.showModal({
-            title: '提示',
-            content: '选择的时间不能小于当前时间'
+
+        // takeaway: express_fee
+        if (this.currentIndex === 2) {
+          totalAmount += this.express_fee
+        }
+        if (this.redPacket) {
+          totalAmount -= this.redPacket.amount
+        }
+        this.totalAmount = totalAmount
+
+        this.calcCoffeepoint()
+      },
+      calcCoffeepoint () {
+        if (!this.isUseCoffee) return
+        if (this.originCoffeepoint >= this.totalAmount) {
+          // because of redPacket, totalAmount maybe nagative
+          this.coffeepoint = this.totalAmount
+          this.totalAmount = 0
+        } else {
+          this.coffeepoint = this.originCoffeepoint
+          this.totalAmount -= this.originCoffeepoint
+        }
+      },
+      pay (order_id, pay_type, callback) {
+        this.$get({
+          action: 'wxpay',
+          order_id,
+          CT_token: store.state.token
+        }).then(info => info).then(info => {
+          if (!info) return
+          const { pay_data, coffee_coins } = info
+          if (coffee_coins) {
+            this.$showToast('支付成功')
+            callback && callback(order_id, pay_type)
+            return false
+          }
+          wx.requestPayment({
+            ...pay_data,
+            success: res => {
+              this.$showToast('支付成功')
+              callback && callback(order_id, pay_type)
+            },
+            fail: res => {
+              if (res.errMsg.indexOf('fail cancel')) {
+                this.$showToast('取消支付')
+              } else {
+                this.$showModal(res.errMsg)
+              }
+            }
           })
+        })
+      },
+      handleConfirm (pay_type = 1) {
+        // 1: pay-online 0:pay-offline
+        if (this.currentIndex != 2 &&
+            Date.now() > getTimestamp(this.dining_time)) {
+          return this.$showModal('选择的时间不能小于当前时间')
+        }
+        if (this.currentIndex == 2 && this.noTakeaway) {
+          return this.$showModal('对不起，您当前位置超出可配送范围')
+        }
+        if (!this.userAddress && this.currentIndex === 2) {
+          if (!this.address.name) {
+            return this.$showModal('请填写收货人姓名')
+          }
+          if (!this.address.mobileno) {
+            return this.$showModal('请填写收货人手机号')
+          }
+          if (!this.address.address) {
+            return this.$showModal('请填写收货人详细地址')
+          }
         }
         let data = {
           CT_token: store.state.token,
           action: 'addorder',
           branch_id: this.branch.id,
           type: this.currentIndex,
-          user_coupon_id: '',
-          dining_time: getTimeNumber(this.dining_time),
-          remark: this.remark,
+          dining_time: time2Number(this.dining_time),
+          remark: this.remark || '',
           cartinfo: this.cartinfo,
-          no_pay
+          coffee_coins: this.coffeepoint,
+          pay_type
+        }
+        if (this.redPacket) {
+          data.user_coupon_id = this.redPacket.id
         }
         if (this.userAddress) {
           data.address_id = this.userAddress.id
@@ -327,39 +435,56 @@
         }
         this.$get(data, true).then(info => {
           if (!info) return
-          wx.navigateTo({
-            url: `/pages/order/order?order_id=${info.order_id}&type=${this.currentIndex}&no_pay=${no_pay}`
-          })
+
+          if (pay_type == 1) {
+            return this.pay(info.order_id, pay_type, this.navigateToDetail)
+          }
+          this.navigateToDetail(info.order_id)
+        })
+      },
+      navigateToDetail (order_id, pay_type) {
+        wx.navigateTo({
+          url: `/pages/order/order?order_id=${order_id}&pay_type=${pay_type}`
         })
       }
     },
     onShow () {
       const range = []
-      for (let i = 0; i < 24; i++) {
+      const origin = []
+      for (let i = 9; i < 22; i++) {
+        origin.push(i)
         const temp = i + ''
-        const int = temp[1] ? `${temp}:00` : `0${temp}:00`
-        const float = temp[1] ? `${temp}:30` : `0${temp}:30`
-        range.push(int, float)
+        const int = temp[1] ? `${temp}` : `0${temp}`
+        range.push(int)
       }
-      this.range = range
-      this.timeIndex = range.indexOf(getNearTime()) || 0
-      this.dining_time = range[this.timeIndex]
+      this.range = [range, [':'], ['00', '30']]
+      this.multiIndex = getTimeIndex(origin)
+      this.dining_time = this.handleSetValue(this.multiIndex, this.range)
+
+      // remark feild from remark page
+      this.remark = this.$root.$mp.query.remark
     },
     onReady () {
-      const sysinfo = wx.getSystemInfoSync()
-      this.height = `${sysinfo.windowHeight - 68}px`
-
-      const { cartinfo, totalAmount, branch } = store.state.buyGoods
+      const { cartinfo, branch } = store.state
+      const selectRedPacket = this.$root.$mp.query.redinfo
       this.cartinfo = cartinfo
       this.branch = branch
+      // no takeaway if exceed the distance
+      this.noTakeaway = branch.is_waimai == 0
       this.express_fee = branch.express_fee || 0
       this.user = store.state.user
       this.originCoffeepoint = this.user.coffee_coins || 0
 
-      this.totalAmount = totalAmount + this.express_fee
-      if (this.redPacket) {
-        this.totalAmount -= this.redPacket.amount
-      }
+      // any item changed, must recalc total amount
+      let totalAmount = this.caclPureMount()
+      this.redPacket = selectRedPacket
+        ? JSON.parse(selectRedPacket)
+        : (this.user.user_coupon.valid_coupon || []).find(item => totalAmount > item.min_require)
+      // default is tangshi, dont need express_fee
+      this.handleTotalMount()
+    },
+    onUnload () {
+      this.showConfirmDailog = false
     },
     components: { IcIcon, IcCounter, ButtonPay }
   }
@@ -369,8 +494,6 @@
   @import '../../utils/css/var'
   .page-payment
     box-sizing border-box
-    height 100%
-    overflow hidden
     background-color $background-color
     // padding-bottom 100px
     .vendor-info
@@ -423,16 +546,20 @@
           border-right 1px solid @color
         &.no-border
           border-left 0
+        &.disabled
+          background-color #f0f0f0
+          color #cfcfcf
         span
           padding-left 10px
 
       .eat-time
+        position relative
         display flex
         align-items center
         border 1px solid #ccc
         border-radius 6px
         .item-icon
-          padding 5px 6px
+          padding 5px 10px
           background-color #f3f3f3
           text-align center
           margin-right 20px
@@ -440,6 +567,15 @@
           border-bottom-left-radius @border-radius
         .iconfont
           font-size 26px
+        .icon-z-arrowDown,.icon-z-arrowUp
+          position absolute
+          right 15px
+          font-size 16px
+          color #dbdbdb
+        .icon-z-arrowDown
+          bottom 5px
+        .icon-z-arrowUp
+          top 5px
       .first-use input
         border 1px solid #ccc
         border-radius 6px
@@ -457,12 +593,13 @@
 
     .reuse
       position relative
+      margin-top 20px
       .icon-jiantou
         right 0
         center-y()
       .user-info
-        padding-bottom 15px
-        font-size 16px
+        padding-bottom 7px
+        font-size 14px
         .name
           margin-right 10px
       .user-address
@@ -481,9 +618,18 @@
         padding 14px 0
         border-bottom 1px dashed #d8d8d8
         color #666
+        box-sizing border-box
+        .remark-left
+          width 30%
+          padding-right 16px
+        .remark-right
+          width 70%
+          text-align right
         .sale
           color $primary
           padding-right 25px
+          &.is-empty
+            color #999
         .arrow-right
           position absolute
           center-y()
@@ -509,24 +655,6 @@
           font-size 12px
         .amount
           font-size 24px
-    .remark
-      background-color #fff
-      padding 15px
-      h3
-        margin-bottom 10px
-      textarea
-        border 1px solid #ccc
-        border-radius 6px
-        padding 15px
-        min-height 150px
-        width 100%
-        box-sizing border-box
-
-    .btn-fixed
-      position fixed
-      left 0
-      bottom 0
-      width 100%
 
     .dialog
       position fixed
@@ -579,17 +707,6 @@
           border-radius 8px
           padding 0 10px
 
-      .statistics
-        font-size 12px
-        text-align right
-        color #999
-        .currency
-          color $primary
-          margin-left 25px
-        .point
-          color $primary
-          font-size 18px
-
       .btn-group
         display flex
         margin-top 15px
@@ -631,4 +748,29 @@
         background-color #e15f41
         margin-top 40px
         margin-bottom 15px
+
+    .ic-counter
+      display flex
+      justify-content flex-end
+      align-items center
+      text-align center
+      color $gray-dark
+      font-size 16px
+
+      .btn-action
+        display inline-block
+        width 20px
+        height @width
+        line-height (@width - 4)
+        border 1px solid $primary
+        border-radius 50%
+        font-size 24px
+        color $primary
+        background-color #fff
+        margin 0
+        padding 0
+        outline none
+
+      .counter-input
+        width 40px
 </style>

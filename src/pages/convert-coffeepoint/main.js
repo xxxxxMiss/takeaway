@@ -6,6 +6,6 @@ app.$mount()
 
 export default {
   config: {
-    navigationBarTitleText: '兑换咖啡豆'
+    navigationBarTitleText: '兑换咖啡币'
   }
 }

@@ -1,6 +1,9 @@
 <template>
   <div class="page-map">
     <map :style="{ width: '100%', height: measurement.mapH }"
+      show-location
+      :latitude="lat"
+      :longitude="log"
       :markers="markers">
     </map>
     <div class="scroll-container" id="scroller">
@@ -14,7 +17,6 @@
         <ul>
           <list-item v-for="(item, index) in list"
             :key="index" :item="item"></list-item>
-          <!-- <li v-for="i in 100" :key="i">第{{ i }}个</li> -->
         </ul>
       </scroll-view>
     </div>
@@ -29,7 +31,9 @@
   import IcIcon from '@/components/icon'
   import ListItem from './list-item'
 
-  const ITEM_HEIGHT = 142
+  // these values should query by wx.createSelectorQuery
+  // here we use constant value for convenience
+  const ITEM_HEIGHT = 131
   const COLLAPSE_HEIGHT = 45
   const BUTTON_HEIGHT = 50
   export default {
@@ -68,7 +72,8 @@
         if (scrollerH + COLLAPSE_HEIGHT + BUTTON_HEIGHT > sysinfo.windowHeight) {
           scrollerH = sysinfo.windowHeight - scrollerH - COLLAPSE_HEIGHT
         }
-        let mapH = sysinfo.windowHeight - scrollerH - COLLAPSE_HEIGHT - BUTTON_HEIGHT
+        // 5: tweak bottom some gaps
+        let mapH = sysinfo.windowHeight - scrollerH - COLLAPSE_HEIGHT - BUTTON_HEIGHT + 5
         return {
           mapH: `${mapH}px`,
           scrollerH: `${scrollerH}px`
@@ -76,33 +81,43 @@
       }
     },
     onShow () {
-      wx.getLocation({
-        success: ({ latitude, longitude }) => {
-          this.lat = latitude
-          this.log = longitude
-        },
-        fail: () => {
-          this.$showToast('定位失败~')
-        }
-      })
-      this.$get({
-        action: 'branchlist',
-        CT_token: store.state.token
-      }).then(info => {
-        if (!info) return
-        const list = []
-        const markers = []
-        info.forEach(item => {
-          const { address, content, distance, tel, img, id, lat, log } = item
-          list.push({
-            address, content, distance, tel, img, id
-          })
-          markers.push({
-            id, lat, log
-          })
+      new Promise((resolve, reject) => {
+        wx.getLocation({
+          success: ({ latitude, longitude }) => {
+            this.lat = latitude
+            this.log = longitude
+            resolve({latitude, longitude})
+          },
+          fail: (e) => {
+            this.$showToast('定位失败~')
+            reject(e)
+          }
         })
-        this.list = list
-        this.markers = markers
+      }).then(({latitude, longitude}) => {
+        this.$get({
+          lat: latitude,
+          log: longitude,
+          action: 'branchlist',
+          CT_token: store.state.token
+        }, true).then(info => {
+          if (!info) return
+          const list = []
+          const markers = []
+          info.forEach(item => {
+            const { id, lat, log } = item
+            list.push(item)
+            markers.push({
+              id,
+              latitude: lat,
+              longitude: log,
+              iconPath: '/static/images/small_logo.png',
+              width: 20,
+              height: 25
+            })
+          })
+          this.list = list
+          this.markers = markers
+        })
       })
     },
     onReady () {
@@ -114,11 +129,14 @@
 
 <style lang="stylus">
   @import '../../utils/css/var'
-
-  .page-map
+  .page-map, page
     height 100%
     width 100%
     overflow hidden
+    .ic-btn
+      background-color #000
+      color #fff
+
     .scroll-container
       .scroll-content
         height calc(100% - 50px)
@@ -133,5 +151,4 @@
         margin 0 15px
         padding-bottom 6px
         border-bottom 1px dashed #cbcbcb
-
 </style>

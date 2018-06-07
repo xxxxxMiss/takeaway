@@ -7,9 +7,10 @@ Vue.use(Vuex)
 
 const store = new Vuex.Store({
   state: {
-    user: {},
+    user: null,
     token: '',
-    buyGoods: {}
+    branch: {},
+    cartinfo: []
   },
   mutations: {
     setToken: (state, token) => {
@@ -18,8 +19,11 @@ const store = new Vuex.Store({
     setUser: (state, user) => {
       state.user = user
     },
-    setBuyGoods (state, goods) {
-      state.buyGoods = goods
+    setBranch (state, branch) {
+      state.branch = branch
+    },
+    setCartinfo (state, goods) {
+      state.cartinfo = goods
     }
   }
 })

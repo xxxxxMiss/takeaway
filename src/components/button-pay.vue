@@ -5,26 +5,24 @@
       v-if="showCollapse">
       <ic-icon name="z-arrowUp"></ic-icon>
     </div>
-    <a @click="handleConfirm"
-      class="info-content">
-      <div class="pay-badge" v-if="showIcon">
-        <ic-icon :name="icon"></ic-icon>
-        <div class="badge-container" v-if="showBadge">
-          <ic-badge>{{ count }}</ic-badge>
+    <div class="info-content">
+      <div class="info-left" @click="handleCollapse">
+        <div class="pay-badge" v-if="showIcon">
+          <ic-icon :name="icon"></ic-icon>
+          <div class="badge-container" v-if="showBadge">
+            <ic-badge>{{ count }}</ic-badge>
+          </div>
         </div>
-      </div>
-      <div class="pay-info">
-        <template v-if="amount > 0">
+        <div class="pay-info">
           <span class="currency">￥</span>
           <span class="amount">{{ amount }}</span>
-        </template>
-        <template v-else>未选购商品</template>
+        </div>
       </div>
-      <div class="pay-action">
+      <div class="pay-action" @click="handleConfirm">
         <span>{{ text }}</span>
         <ic-icon name="jiantou"></ic-icon>
       </div>
-    </a>
+    </div>
   </div>
 </template>
 
@@ -88,14 +86,17 @@
   @import '../utils/css/var'
   .pay-container
     position relative
-    .info-content
+    .info-content, .info-left
       display flex
       align-items center
       background-color $primary
       color #fff
-      padding 10px 25px
-    .pay-info
-      flex 1
+    .info-content
+      padding 13px 16px
+    .info-left
+      flex 3
+      padding-left 0
+      padding-right 25px
     .pay-action
       flex 1
       display flex
@@ -105,7 +106,7 @@
       span
         padding-right 15px
     .icon-diancan
-      font-size 44px
+      font-size 30px
       line-height 1.1
       padding-right 25px
     .currency
